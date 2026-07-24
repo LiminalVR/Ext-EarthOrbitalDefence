@@ -1,16 +1,10 @@
 {
   "dependencies": {
-    "com.liminal.sdk": "https://github.com/LiminalVR/Liminal-SDK-Unity-Package.git",
-    "com.unity.ads": "2.0.8",
-    "com.unity.analytics": "3.3.2",
-    "com.unity.collab-proxy": "1.2.16",
-    "com.unity.multiplayer-hlapi": "1.0.2",
+    "com.liminal.sdk": "file:C:/Work/Liminal/Platform/LiminalSdk/Liminal-SDK-Unity-Package/Assets/Liminal-SDK",
     "com.unity.package-manager-ui": "2.1.2",
-    "com.unity.purchasing": "2.0.6",
     "com.unity.textmeshpro": "2.0.1",
-    "com.unity.timeline": "1.0.0",
-    "com.unity.xr.legacyinputhelpers": "2.0.2",
-    "com.unity.xr.oculus.android": "1.36.0",
+    "com.unity.timeline": "1.8.12",
+    "com.unity.xr.legacyinputhelpers": "3.0.1",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
     "com.unity.modules.assetbundle": "1.0.0",
@@ -40,12 +34,25 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
-  },
-  "lock": {
-    "com.liminal.sdk": {
-      "hash": "688a205a277401227b554003c754ebc6530b51d8",
-      "revision": "HEAD"
-    }
+    "com.unity.modules.xr": "1.0.0",
+    "com.unity.2d.sprite": "1.0.0",
+    "com.unity.2d.tilemap": "1.0.0",
+    "com.unity.ai.navigation": "2.0.12",
+    "com.unity.device-simulator.devices": "1.0.1",
+    "com.unity.editorcoroutines": "1.0.1",
+    "com.unity.ide.visualstudio": "2.0.27",
+    "com.unity.multiplayer.center": "1.0.1",
+    "com.unity.nuget.newtonsoft-json": "3.2.2",
+    "com.unity.render-pipelines.core": "17.4.0",
+    "com.unity.ugui": "2.0.0",
+    "com.unity.xr.hands": "1.8.0",
+    "com.unity.xr.interaction.toolkit": "3.4.1",
+    "com.unity.xr.management": "4.5.2",
+    "com.unity.xr.oculus": "4.5.4",
+    "com.unity.xr.openxr": "1.16.1",
+    "com.unity.modules.accessibility": "1.0.0",
+    "com.unity.modules.adaptiveperformance": "1.0.0",
+    "com.unity.modules.androidjni": "1.0.0",
+    "com.unity.modules.vectorgraphics": "1.0.0"
   }
 }

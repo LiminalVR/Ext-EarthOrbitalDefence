@@ -25,8 +25,10 @@ public class Fire
     private int _shotsFired;
     private int _enemiesKilled;
     private IVRInputDevice _inputDevice;
-    private IVRPointer _pointer;
+    private Transform _aim;
     private Coroutine EnergyRefillRoutine;
+    private bool _wasTriggerHeld;
+    private bool _loggedAimMissing;
     private GameObject[] Ex;
     private GameObject[] Gu;
     private AudioSource Gunfire;
@@ -62,8 +64,9 @@ public class Fire
         playerLaser.LaserRend = Instantiate(playerLaser.LaserPrefab, new Vector3(0, 0, 0), new Quaternion());
         playerLaser.SetLaserVisuals();
 
-        _inputDevice = VRDevice.Device.PrimaryInputDevice;
-        _pointer = VRDevice.Device.PrimaryInputDevice.Pointer;
+        _inputDevice = VRDevice.Device?.PrimaryInputDevice;
+
+        Debug.Log($"[Fire] Start: inputDevice={_inputDevice?.GetType().Name ?? "null"}, rayInteractor={(PlayerAim.GetRayInteractor() == null ? "null" : "ok")}");
 
         playerLaser.CurrentLaserCharge = playerLaser.MaxLaserCharge;
         TargetingReticule.FillSpeed = ReticuleFillSpeed;
@@ -71,30 +74,49 @@ public class Fire
 
     private void Update()
     {
-        if (_pointer == null)
+        var rayInteractor = PlayerAim.GetRayInteractor();
+        if (rayInteractor == null)
         {
-            _pointer = VRDevice.Device?.PrimaryInputDevice?.Pointer;
+            if (!_loggedAimMissing)
+            {
+                Debug.LogWarning("[Fire] Blocked: no ray interactor available from LiminalControllerManager - FireLaser will not run");
+                _loggedAimMissing = true;
+            }
             return;
         }
 
-        if (_pointer.Transform == null)
-            return;
+        if (_loggedAimMissing)
+        {
+            Debug.Log($"[Fire] Ray interactor acquired: {rayInteractor.name}");
+            _loggedAimMissing = false;
+        }
+
+        _aim = PlayerAim.GetAimOrigin(rayInteractor);
+
+        if (_inputDevice == null)
+            _inputDevice = VRDevice.Device?.PrimaryInputDevice;
 
         this.gameObject.transform.position = obj.transform.position;
         this.gameObject.transform.rotation = obj.transform.rotation;
 
-        FireLaser();
+        FireLaser(rayInteractor);
 
-        CannonObject.transform.rotation = _pointer.Transform.rotation;
+        CannonObject.transform.rotation = _aim.rotation;
     }
 
-    private void FireLaser()
+    private void FireLaser(UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor rayInteractor)
     {
-        if (_pointer == null)
-            return;
+        var sdkTriggerHeld = _inputDevice != null && _inputDevice.GetButton(VRButton.One);
+        var interactorTriggerHeld = rayInteractor.logicalSelectState.active;
+        var triggerHeld = sdkTriggerHeld || interactorTriggerHeld;
 
-        if (_inputDevice.GetButton(VRButton.One) && playerLaser.CurrentLaserCharge > 0f && playerLaser.CanFire)
+        if (triggerHeld && !_wasTriggerHeld)
+            Debug.Log($"[Fire] Trigger pressed (sdk={sdkTriggerHeld}, interactor={interactorTriggerHeld}): charge={playerLaser.CurrentLaserCharge:F1}/{playerLaser.MaxLaserCharge:F1}, CanFire={playerLaser.CanFire}");
+        _wasTriggerHeld = triggerHeld;
+
+        if (triggerHeld && playerLaser.CurrentLaserCharge > 0f && playerLaser.CanFire)
         {
+            Debug.Log($"[Fire] Shot fired #{_shotsFired + 1}, charge before drain={playerLaser.CurrentLaserCharge:F1}");
             playerLaser.CanFire = false;
             playerLaser.DrainEnergy();
 
@@ -106,12 +128,12 @@ public class Fire
                 Gunfire.Play();
             }
 
-            StartCoroutine(playerLaser.FireCooldownCoro(_pointer.Transform.position));
+            StartCoroutine(playerLaser.FireCooldownCoro(_aim.position));
 
             _shotsFired++;
         }
 
-        if (!_inputDevice.GetButton(VRButton.One))
+        if (!triggerHeld)
         {
             playerLaser.ChargeLaser();
         }
@@ -141,9 +163,14 @@ public class Fire
 
     private void LaserRaycast()
     {
-        if (!Physics.SphereCast(_pointer.Transform.position, playerLaser.LaserRadius, _pointer.Transform.forward, out var hit,
+        if (!Physics.SphereCast(_aim.position, playerLaser.LaserRadius, _aim.forward, out var hit,
             Mathf.Infinity))
+        {
+            Debug.Log("[Fire] Raycast: no hit");
             return;
+        }
+
+        Debug.Log($"[Fire] Raycast hit: {hit.collider.name}, IEnemy={(hit.collider.GetComponent<IEnemy>() != null)}");
 
         playerLaser.LaserRend.SetPosition(1, hit.point);
 

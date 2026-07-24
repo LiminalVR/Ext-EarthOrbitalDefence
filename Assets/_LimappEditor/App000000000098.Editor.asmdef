@@ -1,0 +1,20 @@
+{
+  "name": "App000000000098.Editor",
+  "rootNamespace": null,
+  "references": [
+    "App000000000098",
+    "Unity.Timeline.Editor",
+    "Unity.Timeline"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": null,
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": null,
+  "autoReferenced": true,
+  "defineConstraints": null,
+  "versionDefines": null,
+  "noEngineReferences": false
+}

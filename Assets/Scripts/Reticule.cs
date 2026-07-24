@@ -8,6 +8,8 @@ public class Reticule : MonoBehaviour
     public Button Button;
     public Image EnergyFill;
     public float FillSpeed;
+    public float RaycastRadius = 15f;
+    public float DefaultDistance = 100f;
 
     private float _targetFillValue;
     private bool _start = false;
@@ -22,11 +24,22 @@ public class Reticule : MonoBehaviour
 
     private void FixedUpdate()
     {
-        var VRDevice = Liminal.SDK.VR.VRDevice.Device;
-        var pointer = VRDevice.PrimaryInputDevice.Pointer;
+        if (!_start)
+            return;
 
-        if (_start == true)
-            Crosshairs.SetPositionAndRotation(pointer.CurrentRaycastResult.worldPosition, pointer.Transform.rotation);
+        var rayInteractor = PlayerAim.GetRayInteractor();
+        if (rayInteractor == null)
+            return;
+
+        // The upgraded platform aims with the rig's XRI ray interactors; the legacy
+        // IVRPointer.CurrentRaycastResult is never updated any more. Raycast the world
+        // ourselves from the interactor's ray origin, matching the spherecast Fire.cs shoots with.
+        var aim = PlayerAim.GetAimOrigin(rayInteractor);
+        var targetPoint = Physics.SphereCast(aim.position, RaycastRadius, aim.forward, out var hit, Mathf.Infinity)
+            ? hit.point
+            : aim.position + aim.forward * DefaultDistance;
+
+        Crosshairs.SetPositionAndRotation(targetPoint, aim.rotation);
     }
 
     void StartG()
