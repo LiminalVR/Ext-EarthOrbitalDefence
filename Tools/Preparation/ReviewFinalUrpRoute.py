@@ -1,0 +1,20 @@
+from pathlib import Path
+from datetime import datetime,timezone
+import json,hashlib
+from PIL import Image,ImageDraw
+p=Path(__file__).resolve().parents[2];stage=p/'Builds/URPMigration/FinalUrpRoute-20261003T024122303Z';d=json.loads((stage/'observation.json').read_text());assert d['completed'] and d['sdkComplete'] and d['sdkResult'] and not d['errors']
+out=p/'Builds/URPMigration'/('FinalUrpReview-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ'));out.mkdir();sha=lambda f:hashlib.sha256(Path(f).read_bytes()).hexdigest()
+contacts=[]
+for k in range(0,len(d['images']),8):
+ batch=d['images'][k:k+8];im=Image.new('RGB',(960,((len(batch)+1)//2)*298),(25,25,25));draw=ImageDraw.Draw(im)
+ for i,r in enumerate(batch):
+  x=(i%2)*480;y=(i//2)*298;draw.text((x+6,y+5),r['label']+' | game '+str(round(r['state']['gameTime'],2)),fill='white');im.paste(Image.open(r['path']).convert('RGB').resize((480,270)),(x,y+23))
+ file=out/('natural-'+str(k//8+1)+'.jpg');im.save(file,quality=94);contacts.append({'path':str(file),'sha256':sha(file)})
+scopes=[e for e in d['events'] if e['event']=='ActualOwnedMainCaptureScope'];assert len(scopes)==len(d['images']) and all(e['restored'] and e['beginDelta']==e['endDelta'] for e in scopes)
+source=p/'Builds/URPMigration/SourceRoute-20261003T000144154Z/observation.json';s=json.loads(source.read_text());rows=[];matched=Image.new('RGB',(960,3*298),(25,25,25));draw=ImageDraw.Draw(matched)
+for i,family in enumerate(['Cube (1)','StarSparrow2 Variant','Asteroid_01_S 1 Variant']):
+ a=next(r for r in s['images'] if r['label']=='Body-'+family+'-0');b=next(r for r in d['images'] if r['label']==a['label']);draw.text((6,i*298+5),family+' | Source / Current URP | distinct natural instances, supplementary framing',fill='white')
+ for x,r in enumerate([a,b]):matched.paste(Image.open(r['path']).convert('RGB').resize((480,270)),(x*480,i*298+23))
+ rows.append({'family':family,'source':a,'current':b,'sourceImageSHA256':sha(a['path']),'currentImageSHA256':sha(b['path']),'meaning':'Actual naturally spawned family bodies, same observer camera-framing method. Distinct instance/position/clock/nearby effect states, not exact paired-pose acceptance.'})
+file=out/'natural-source-current-bodies.jpg';matched.save(file,quality=94);contacts.append({'path':str(file),'sha256':sha(file)})
+last=d['samples'][-1];report={'utc':datetime.now(timezone.utc).isoformat(),'observation':str(stage/'observation.json'),'observationSHA256':sha(stage/'observation.json'),'sourceObservation':str(source),'sourceSHA256':sha(source),'actualGameTime':d['gameTime'],'elapsed':d['elapsed'],'actualSDKComplete':d['sdkComplete'],'sdkResult':d['sdkResult'],'errors':d['errors'],'images':[{'path':r['path'],'sha256':sha(r['path']),'label':r['label'],'time':r['time'],'state':r['state']} for r in d['images']],'balancedOwnerScopes':len(scopes),'bodySourceCurrentRows':rows,'contacts':contacts,'sourceCurrentNaturalScore':{'sourceShots':s['samples'][-1]['shots'],'currentShots':last['shots'],'sourceKills':s['samples'][-1]['kills'],'currentKills':last['kills'],'sourceHealth':s['samples'][-1]['earthHealth'],'currentHealth':last['earthHealth']},'limits':['Stochastic enemy/shot/effect state differs; natural images are lifecycle evidence, not exact-state pairs. Controlled source/candidate transport proof remains separate.','ColdMain first explicit renders occur time0/fade black: root/scope/cleanup evidence only. Meaningful geometry visible naturally afterward.','Original source timer/partial score capture quirk preserved as historical; current timer/image validity independent. FinalSDK black ending is actual.','Controller fixture restored; no private game callbacks/timing/score/health/device substitution. No headset/player proof.']};(out/'report.json').write_text(json.dumps(report,indent=2));(p/'Tools/URPMigration/FinalRun-current.json').write_text(json.dumps({'stage':str(stage),'observation':str(stage/'observation.json'),'review':str(out/'report.json')},indent=2));print(json.dumps({'report':str(out/'report.json'),'sha256':sha(out/'report.json'),'contacts':contacts}))

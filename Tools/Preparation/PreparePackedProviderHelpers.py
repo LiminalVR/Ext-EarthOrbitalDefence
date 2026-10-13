@@ -1,0 +1,7 @@
+from pathlib import Path
+from datetime import datetime,timezone
+import hashlib,json
+p=Path(__file__).resolve().parents[2];base=Path('D:/Work/Liminal/Platform/Upgrade/Limapps/168_Big_Top_Blast/Carnival/Tools/URPMigration');out=p/'Builds/URPMigration'/('PackedProviderHelperPreparation-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ'));out.mkdir();sha=lambda f:hashlib.sha256(f.read_bytes()).hexdigest();rows=[]
+for name,dest in [('Native168PackedScriptProviders.cs','Native49PackedScriptProviders.cs'),('AuthenticatePackedProviders.py','AuthenticatePackedProviders.py'),('VerifyPackedProfileFields.py','VerifyPackedProfileFields.py')]:
+ source=base/name;text=source.read_text();text=text.replace('Native168PackedScriptProviders','Native49PackedScriptProviders').replace('Assets/Scenes/CircusScene.unity','Assets/Scenes/The_Game.unity');target=p/'Tools/URPMigration'/dest;target.write_text(text);rows.append({'source':str(source),'sourceSHA256':sha(source),'destination':str(target),'destinationSHA256':sha(target),'changes':'Class and scene path only; own actual native BuildReport, own target TypeDb/Release DLL, own nativeprofileJSON and APK bytes determine all bindings/leaf checks. No other experience profile values/constants borrowed.'})
+(out/'report.json').write_text(json.dumps({'utc':datetime.now(timezone.utc).isoformat(),'helpers':rows,'limits':['Prepared outsideAssets only; requires actual current native Android BuildPlayer. No synthetic profile/provider claim before actual target/packed bytes.']},indent=2));print(str(out/'report.json'))

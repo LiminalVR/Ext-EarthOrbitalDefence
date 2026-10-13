@@ -1,0 +1,22 @@
+from pathlib import Path
+from datetime import datetime,timezone
+import json,hashlib
+p=Path(__file__).resolve().parents[2];f=p/'Tools/URPMigration/Desktop49FinalUrpRoute.cs';text=f.read_text().replace('Desktop49FinalUrpRoute','Desktop49FinalUrpLossRoute').replace('FinalUrpRoute-','FinalUrpLossRoute-').replace('auto.EnabledHands=AutoClicker.Hands.Both','auto.EnabledHands=AutoClicker.Hands.None').replace('auto.EnabledHands=(app.CurrentTime>10&&((int)app.CurrentTime%14)>=11)?AutoClicker.Hands.None:AutoClicker.Hands.Both;','auto.EnabledHands=AutoClicker.Hands.None;')
+text=text.replace('static string stage;','static float depletion=-1;static string stage;').replace('brief=shortMode;finished=false;','depletion=-1;brief=shortMode;finished=false;')
+text=text.replace('Aim();var shots=', '''Aim();
+   if(health!=null&&!health.gameObject.activeSelf){
+    if(depletion<0){depletion=Time.time;events.Add(new JObject{["event"]="ActualNormalHealthDepletion",["time"]=Time.time,["healthActive"]=health.gameObject.activeSelf,["gameTime"]=app.CurrentTime,["shots"]=fire.GetShotsFired()});Capture("NormalHealthDepleted");}
+    foreach(float phase in new[]{.1f,.5f,1.1f})if(Time.time-depletion>=phase&&captured.Add("Depleted"+phase)){
+     var geo=typeof(Health).GetField("geo",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(health) as GameObject;
+     var particles=geo==null?new JArray():new JArray(geo.GetComponentsInChildren<ParticleSystem>().Select(ps=>new JObject{["name"]=H(ps.transform),["time"]=ps.time,["playing"]=ps.isPlaying,["particleCount"]=ps.particleCount,["lightModuleEnabled"]=ps.lights.enabled,["lightRangeMultiplier"]=ps.lights.rangeMultiplier,["lightIntensityMultiplier"]=ps.lights.intensityMultiplier,["lightPrefab"]=ps.lights.light==null?null:ps.lights.light.name}));
+     events.Add(new JObject{["event"]="ActualDepletionEffectPhase",["time"]=Time.time,["elapsedSinceDepletion"]=Time.time-depletion,["targetPhase"]=phase,["effect"]=geo==null?null:H(geo.transform),["active"]=geo!=null&&geo.activeInHierarchy,["particles"]=particles});Capture("DepletionEffect-"+phase);
+    }
+   }
+   var shots=''')
+text=text.replace('["indirectSpec"]=new JArray(', '["visibleLights"]=VisibleLights(ctx,cam),["indirectSpec"]=new JArray(')
+text=text.replace('static JObject State()=>', '''static JArray VisibleLights(ScriptableRenderContext context,Camera camera){if(!camera.TryGetCullingParameters(out var cp))return new JArray();var cull=context.Cull(ref cp);var result=new JArray();for(int i=0;i<cull.visibleLights.Length;i++){var l=cull.visibleLights[i];if(l.lightType==LightType.Point)result.Add(new JObject{["index"]=i,["type"]=l.lightType.ToString(),["range"]=l.range,["color"]=new JArray(l.finalColor.r,l.finalColor.g,l.finalColor.b,l.finalColor.a),["position"]=new JArray(l.localToWorldMatrix.m03,l.localToWorldMatrix.m13,l.localToWorldMatrix.m23),["lightObject"]=l.light==null?null:l.light.name});}return result;}
+ static JObject State()=>''')
+text=text.replace('ActualURPUIpointerclick/SDKpublicAutoClicker andrealSphereCast/Enemycollisions.','ActualURPUIpointerclick/normalno-fireSDKinput andrealEnemy/Earthcollisions. Editorposefixture retained, AutoClickerHandsNone from start; no health/Damage/Hit/privatecallbacks invoked.')
+text=text.replace('["gameTime"]=app==null?0:app.CurrentTime,','["gameTime"]=app==null?0:app.CurrentTime,["depletionObserved"]=depletion>=0,')
+dest=p/'Tools/URPMigration/Desktop49FinalUrpLossRoute.cs';dest.write_text(text);assert 'auto.EnabledHands=AutoClicker.Hands.Both' not in text
+out=p/'Builds/URPMigration'/('LossObserverPreparation-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ'));out.mkdir();sha=lambda f:hashlib.sha256(f.read_bytes()).hexdigest();(out/'report.json').write_text(json.dumps({'sourceObserver':str(f),'sourceSHA256':sha(f),'currentObserver':str(dest),'currentSHA256':sha(dest),'changes':['Only normal held input released/HandsNone; normalUI/EnemyEarth collision/Health.Update triggers loss at authored stochastic time.','Read private instantiated geo field only for authentic effect identity; no callback/health/timer writes.','Natural effect .1/.5/1.1 checkpoints with source-authored light module data and native culling point readback under actual owned0/0 scope.'], 'limits':['This short distinct changed point/depletion path supplements complete180 survival; original source63.78 loss reused.']},indent=2));print(str(out/'report.json'))

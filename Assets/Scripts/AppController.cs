@@ -20,6 +20,20 @@ public class AppController
     public Reticule Crosshairs;
     public ScoreMenu ScoreMenu;
 
+    // Register the actual normal SDK experience root, including dynamic host loading.
+    private Transform _sourceLightingOwner;
+    private void OnEnable()
+    {
+        var owner = GetComponentInParent<Liminal.SDK.Core.ExperienceApp>(true);
+        _sourceLightingOwner = owner == null ? null : owner.transform;
+        EarthOrbitalSourceLightingScope.RegisterExperience(_sourceLightingOwner);
+    }
+    private void OnDisable()
+    {
+        EarthOrbitalSourceLightingScope.UnregisterExperience(_sourceLightingOwner);
+        _sourceLightingOwner = null;
+    }
+
     private bool _timerActive;
     private bool _isEnded;
 

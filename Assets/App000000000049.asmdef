@@ -1,5 +1,5 @@
 {
-  "name": "App000000000098",
+  "name": "App000000000049",
   "rootNamespace": null,
   "references": [
     "Examples",
@@ -33,9 +33,9 @@
     "Unity.XR.Hands.Samples.VisualizerSample",
     "Unity.XR.Interaction.Toolkit",
     "Unity.XR.Interaction.Toolkit.Samples.Hands",
+    "Unity.XR.Interaction.Toolkit.Samples.InteractionSimulator",
     "Unity.XR.Interaction.Toolkit.Samples.StarterAssets",
     "Unity.XR.Management",
-    "Unity.XR.Oculus",
     "Unity.XR.OpenXR",
     "Unity.XR.OpenXR.Features.ConformanceAutomation",
     "Unity.XR.OpenXR.Features.MetaQuestSupport",

@@ -1,0 +1,22 @@
+using System;using System.IO;using System.Linq;using Newtonsoft.Json.Linq;using UnityEditor;using UnityEngine;using UnityEngine.Rendering;using Object=UnityEngine.Object;
+public static class Native49ColdMain {
+ public static string Inspect(){
+  if(!EditorApplication.isPlaying||GraphicsSettings.currentRenderPipeline==null)throw new Exception("FreshURPPlayrequired");
+  var app=Object.FindObjectsByType<AppController>(FindObjectsInactive.Exclude).Single();var camera=Camera.main;
+  if(camera==null||app.CurrentTime!=0||EarthOrbitalSourceLightingScope.RegisteredExperienceCount<1)throw new Exception("Normalownedstartrequired");
+  var stage=Path.GetFullPath("Builds/URPMigration/ColdMain-"+DateTime.UtcNow.ToString("yyyyMMddTHHmmssfffZ"));Directory.CreateDirectory(stage);var rows=new JArray();var errors=new JArray();
+  Application.LogCallback log=(message,trace,type)=>{if(type==LogType.Error||type==LogType.Exception||type==LogType.Assert)errors.Add(new JObject{["type"]=type.ToString(),["message"]=message,["trace"]=trace});};Application.logMessageReceived+=log;
+  try{for(int i=0;i<2;i++){
+   var row=new JObject{["ordinal"]=i,["frame"]=Time.frameCount,["time"]=Time.time,["rootCount"]=EarthOrbitalSourceLightingScope.RegisteredExperienceCount,["camera"]=camera.name,["scene"]=camera.gameObject.scene.path,["position"]=new JArray(camera.transform.position.x,camera.transform.position.y,camera.transform.position.z)};
+   bool linear=GraphicsSettings.lightsUseLinearIntensity,temp=GraphicsSettings.lightsUseColorTemperature;var spec=Shader.GetGlobalVector("_EarthOrbitalSourceIndirectSpecColor");long b=EarthOrbitalSourceLightingScope.BeginCount,e=EarthOrbitalSourceLightingScope.EndCount;
+   var scopes=new JArray();Action<ScriptableRenderContext,Camera> begin=(ctx,c)=>{if(c==camera){var dc=Shader.GetGlobalVector("_EarthOrbitalSourceIndirectSpecColor");scopes.Add(new JObject{["linear"]=GraphicsSettings.lightsUseLinearIntensity,["temperature"]=GraphicsSettings.lightsUseColorTemperature,["pending"]=EarthOrbitalSourceLightingScope.PendingScopes,["ownedDC"]=new JArray(dc.x,dc.y,dc.z),["sourceDC"]=new JArray(EarthOrbitalSourceBakedEnvironment.SkyAmbientDC.x,EarthOrbitalSourceBakedEnvironment.SkyAmbientDC.y,EarthOrbitalSourceBakedEnvironment.SkyAmbientDC.z),["reflectionIntensity"]=RenderSettings.reflectionIntensity});}};
+   var oldRT=camera.targetTexture;var active=RenderTexture.active;var stereo=camera.stereoTargetEye;var aspect=camera.aspect;var rt=new RenderTexture(800,450,24,RenderTextureFormat.ARGB32);var tex=new Texture2D(800,450,TextureFormat.RGBA32,false);
+   try{rt.Create();camera.targetTexture=rt;camera.stereoTargetEye=StereoTargetEyeMask.None;camera.aspect=800f/450;RenderPipelineManager.beginCameraRendering+=begin;try{camera.Render();}finally{RenderPipelineManager.beginCameraRendering-=begin;}RenderTexture.active=rt;tex.ReadPixels(new Rect(0,0,800,450),0,0);tex.Apply();string file=stage+"/"+i+"-actualMain.png";File.WriteAllBytes(file,tex.EncodeToPNG());row["path"]=file;}
+   finally{camera.targetTexture=oldRT;camera.stereoTargetEye=stereo;camera.aspect=aspect;RenderTexture.active=active;Object.DestroyImmediate(tex);rt.Release();Object.DestroyImmediate(rt);}
+   row["scopes"]=scopes;row["beginDelta"]=EarthOrbitalSourceLightingScope.BeginCount-b;row["endDelta"]=EarthOrbitalSourceLightingScope.EndCount-e;
+   row["restored"]=EarthOrbitalSourceLightingScope.PendingScopes==0&&GraphicsSettings.lightsUseLinearIntensity==linear&&GraphicsSettings.lightsUseColorTemperature==temp&&Shader.GetGlobalVector("_EarthOrbitalSourceIndirectSpecColor")==spec;
+   row["acceptedOwnerScope"]=scopes.Count==1&&!(bool)scopes[0]["linear"]&&!(bool)scopes[0]["temperature"]&&(int)scopes[0]["pending"]>=1&&(bool)row["restored"]&&(long)row["beginDelta"]==(long)row["endDelta"];rows.Add(row);
+  }}finally{Application.logMessageReceived-=log;}
+  var result=new JObject{["utc"]=DateTime.UtcNow.ToString("o"),["pid"]=System.Diagnostics.Process.GetCurrentProcess().Id,["playing"]=true,["pipeline"]=GraphicsSettings.currentRenderPipeline.name,["rows"]=rows,["errors"]=errors,["accepted"]=errors.Count==0&&rows.All(r=>(bool)r["acceptedOwnerScope"]),["limits"]="First two explicit actualMain renders in freshURP-only process after normalPlay startup; no source/Builtin/global warming, diagnostic registration, controller/event/progression writes. Natural earlier URP startup frames may precede helper attachment; full ordinary progression follows separately."};File.WriteAllText(stage+"/report.json",result.ToString());return stage+"/report.json";
+ }
+}

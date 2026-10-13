@@ -1,0 +1,12 @@
+{
+  "project": "49_Earth_Orbital_Defence",
+  "name": "Experience49",
+  "scene": "Assets/Scenes/The_Game.unity",
+  "progression": "Inspect before configuring a natural run",
+  "checkpoints": [
+    60,
+    120,
+    180
+  ],
+  "review": "Not started"
+}

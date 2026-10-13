@@ -37,3 +37,12 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+
+/Builds/
+/Logs/
+/UserSettings/
+/.utmp/
+*.slnx
+/Limapp-output/
+*_BurstDebugInformation_DoNotShip/
+__pycache__/

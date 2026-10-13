@@ -1,8 +1,8 @@
 {
-  "name": "App000000000098.Editor",
+  "name": "App000000000049.Editor",
   "rootNamespace": null,
   "references": [
-    "App000000000098",
+    "App000000000049",
     "Unity.Timeline.Editor",
     "Unity.Timeline"
   ],
